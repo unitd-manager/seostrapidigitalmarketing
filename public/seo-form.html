@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!-- Prevent cache -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <title>SEO Audit Form</title>
+
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <style>
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: #111827;
+      padding: 30px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 14px;
+      color: #ccc;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    button {
+      display: block;
+      width: auto;
+      padding: 10px 24px;
+      margin: 20px auto 0;
+      background: #facc15;
+      color: black;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h2>Get Your Free SEO Audit Report</h2>
+
+    <p>
+      Enter your details and we’ll send your SEO report within 24 hours.
+    </p>
+
+    <form id="seoForm">
+
+      <input
+        type="text"
+        id="name"
+        placeholder="Your Name"
+        required
+      />
+
+      <input
+        type="text"
+        id="website"
+        placeholder="www.example.com"
+        required
+      />
+
+      <input
+        type="email"
+        id="email"
+        placeholder="Email Address"
+        required
+      />
+
+      <button type="submit">
+        Get My Report
+      </button>
+
+    </form>
+
+  </div>
+
+  <script>
+
+    // Initialize EmailJS
+    emailjs.init("CYGz-4ZrPq7oVsO_4");
+
+    // Form Submit
+    document
+      .getElementById("seoForm")
+      .addEventListener("submit", function(e) {
+
+      e.preventDefault();
+
+      const name = document
+        .getElementById("name")
+        .value
+        .trim();
+
+      const website = document
+        .getElementById("website")
+        .value
+        .trim();
+
+      const email = document
+        .getElementById("email")
+        .value
+        .trim()
+        .toLowerCase();
+
+      // Website validation
+      const websitePattern =
+        /^(https?:\/\/)?(www\.)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/;
+
+      if (!websitePattern.test(website)) {
+        alert("Please enter a valid website URL.");
+        return;
+      }
+
+      // Email validation
+      const emailPattern =
+        /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+
+      if (!emailPattern.test(email)) {
+        alert("Please enter a valid email address.");
+        return;
+      }
+
+      // Send Email
+      emailjs.send(
+        "service_5frfgck",
+        "template_l5j3f6k",
+        {
+          name: name,
+          website: website,
+          email: email,
+        }
+      )
+
+      .then(function(response) {
+
+        console.log("SUCCESS!", response.status, response.text);
+
+        alert("SEO Audit Request Sent Successfully!");
+
+        // Reset form
+        document.getElementById("seoForm").reset();
+
+        // Clear cache
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // Redirect
+        window.location.href =
+          "https://seo.unitdtechnologies.com/";
+
+      })
+
+      .catch(function(error) {
+
+        console.log("FAILED...", error);
+
+        alert("Failed to send request.");
+
+      });
+
+    });
+
+  </script>
+
+</body>
+</html>
