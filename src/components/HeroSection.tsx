@@ -67,7 +67,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
                 </span>
               )}
             </h1>
-
+ 
             {data?.description && (
               <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-lg">
                 {data.description}
