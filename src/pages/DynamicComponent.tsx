@@ -10,14 +10,20 @@ import VisionSection from "@/components/VisionSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import FinalCTASection from "@/components/FinalCTASection";
 import PricingSection from "@/components/PricingSection";
+import CaseStudiesSection from "@/components/CaseStudiesSection";
+import AboutUsSection from "@/components/AboutUsSection";
+import Footer from "@/components/Footer";
  
 type DynamicComponentProps = {
   layout: any;
 };
 
 const DynamicComponent = ({ layout }: DynamicComponentProps) => {
-  switch (layout.__component) {
 
+  console.log("DYNAMIC COMPONENT:", layout);
+  console.log("DYNAMIC COMPONENT UID:", layout?.__component);
+
+  switch (layout.__component) {
     case "acf-sections.banner-layout":
       return <HeroSection data={layout} />;
 
@@ -61,6 +67,15 @@ const DynamicComponent = ({ layout }: DynamicComponentProps) => {
 
   case "acf-sections.footer-common-cta":
   return <FinalCTASection data={layout} />;
+
+  case "acf-sections.home-automation-edge":
+  return <CaseStudiesSection data={layout} />;
+
+  case "acf-sections.session-item-sections":
+  return <AboutUsSection data={layout} />;
+  
+  case "acf-sections.home-award-winner":
+  return <Footer data={layout} />;
 
     default:
       console.warn(

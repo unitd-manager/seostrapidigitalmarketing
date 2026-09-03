@@ -21,7 +21,7 @@ const queryClient = new QueryClient();
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Index />} />
+      <Route path="/" element={<DynamicPage />} />
       {/* <Route path="/packages" element={<Packages />} /> */}
       <Route path="/cart" element={<Cart />} />
       <Route path="/checkout" element={<Checkout />} />

@@ -33,10 +33,8 @@ type PricingCard = {
   duration?: string;
   theme: string;
   icon: string;
-  priceId: string;   // Add this
-  feature_list: {
-    title: string;
-  }[];
+  priceId?: string;
+  feature_list?: FeatureItem[];
   button?: {
     label: string;
     url: string;
