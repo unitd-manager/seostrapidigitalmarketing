@@ -22,13 +22,35 @@ export const fetchPageBySlug = async (slug: string) => {
     `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
     `&populate[pageBuilder][on][acf-sections.home-featured-case-study][populate][pricing_cards][populate][feature_list]=*`;
 
+  /*
+   * --------------------------------------------------
+   * 3. ABOUT US / SESSION ITEM SECTIONS API
+   * --------------------------------------------------
+   *
+   * "session_tabs" is a repeatable component, and each
+   * session_tabs entry has its OWN nested repeatable
+   * component called "sessions". A bare populate=* on
+   * the dynamic zone only goes one level deep, so
+   * "sessions" never comes back populated unless we
+   * ask for it explicitly, same as the pricing_cards
+   * workaround above.
+   */
+
+  const aboutUrl =
+    `${STRAPI_URL}/api/pages` +
+    `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
+    `&populate[pageBuilder][on][acf-sections.session-item-sections][populate][session_tabs][populate][sessions]=*`;
+
   console.log("fetchPageBySlug: normal URL:", pageUrl);
   console.log("fetchPageBySlug: pricing URL:", pricingUrl);
+  console.log("fetchPageBySlug: about URL:", aboutUrl);
 
-  const [pageResponse, pricingResponse] = await Promise.all([
-    fetch(pageUrl),
-    fetch(pricingUrl),
-  ]);
+  const [pageResponse, pricingResponse, aboutResponse] =
+    await Promise.all([
+      fetch(pageUrl),
+      fetch(pricingUrl),
+      fetch(aboutUrl),
+    ]);
 
   if (!pageResponse.ok) {
     console.error(
@@ -52,8 +74,20 @@ export const fetchPageBySlug = async (slug: string) => {
     );
   }
 
+  if (!aboutResponse.ok) {
+    console.error(
+      "fetchPageBySlug: about response not ok",
+      aboutResponse
+    );
+
+    throw new Error(
+      `Failed to fetch about data: ${aboutResponse.status}`
+    );
+  }
+
   const pageResult = await pageResponse.json();
   const pricingResult = await pricingResponse.json();
+  const aboutResult = await aboutResponse.json();
 
   console.log(
     "fetchPageBySlug: normal result:",
@@ -63,6 +97,11 @@ export const fetchPageBySlug = async (slug: string) => {
   console.log(
     "fetchPageBySlug: pricing result:",
     pricingResult
+  );
+
+  console.log(
+    "fetchPageBySlug: about result:",
+    aboutResult
   );
 
   const page = pageResult?.data?.[0];
@@ -84,6 +123,21 @@ export const fetchPageBySlug = async (slug: string) => {
     (layout: any) =>
       layout?.__component ===
       "acf-sections.home-featured-case-study"
+  );
+
+  /*
+   * --------------------------------------------------
+   * Find about-us layout from special API response
+   * --------------------------------------------------
+   */
+
+  const aboutLayouts =
+    aboutResult?.data?.[0]?.pageBuilder || [];
+
+  const aboutLayout = aboutLayouts.find(
+    (layout: any) =>
+      layout?.__component ===
+      "acf-sections.session-item-sections"
   );
 
   /*
@@ -110,13 +164,27 @@ export const fetchPageBySlug = async (slug: string) => {
         };
       }
 
+      if (
+        layout?.__component ===
+        "acf-sections.session-item-sections"
+      ) {
+        return {
+          ...layout,
+
+          session_tabs:
+            aboutLayout?.session_tabs ||
+            layout?.session_tabs ||
+            [],
+        };
+      }
+
       return layout;
     }
   );
 
   /*
    * --------------------------------------------------
-   * Return page with enriched pricing data
+   * Return page with enriched pricing + about data
    * --------------------------------------------------
    */
 
@@ -164,13 +232,16 @@ export const fetchFooter = async () => {
   }
 
   const result = await response.json();
+  const footer = result?.data?.attributes
+    ? result.data.attributes
+    : result?.data || null;
 
   console.log(
     "fetchFooter: result:",
     result
   );
 
-  return result?.data || null;
+  return footer;
 };
 
 
@@ -213,11 +284,14 @@ export const fetchHeader = async () => {
   }
 
   const result = await response.json();
+  const header = result?.data?.attributes
+    ? result.data.attributes
+    : result?.data || null;
 
   console.log(
     "HEADER API DATA:",
     result
   );
 
-  return result?.data || null;
+  return header;
 };

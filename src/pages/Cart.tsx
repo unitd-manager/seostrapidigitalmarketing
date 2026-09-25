@@ -1,17 +1,49 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ShoppingCart, Trash2, ArrowLeft, ArrowRight, Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/context/CartContext";
+import { fetchHeader, fetchFooter } from "@/lib/strapi";
 
 const Cart = () => {
   const { items, removeFromCart, clearCart, cartTotal } = useCart();
   const navigate = useNavigate();
 
+  const [headerData, setHeaderData] = useState<any>(null);
+  const [footerData, setFooterData] = useState<any>(null);
+
+  /*
+   * This page renders standalone (not through DynamicPage),
+   * so it has to fetch header/footer itself, same as CaseStudyDetail.
+   * Failures here should not break the cart content.
+   */
+  useEffect(() => {
+    const loadChrome = async () => {
+      try {
+        const header = await fetchHeader();
+        setHeaderData(header);
+      } catch (headerError) {
+        console.error("Cart: failed to load header", headerError);
+        setHeaderData(null);
+      }
+
+      try {
+        const footer = await fetchFooter();
+        setFooterData(footer);
+      } catch (footerError) {
+        console.error("Cart: failed to load footer", footerError);
+        setFooterData(null);
+      }
+    };
+
+    loadChrome();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Header />
+      <Header data={headerData} />
       <main className="pt-28 pb-32">
         <div className="section-container max-w-4xl">
           <motion.div
@@ -158,7 +190,7 @@ const Cart = () => {
           </motion.div>
         </div>
       </main>
-      <Footer />
+      <Footer data={footerData} />
     </div>
   );
 };

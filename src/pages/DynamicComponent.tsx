@@ -13,6 +13,8 @@ import PricingSection from "@/components/PricingSection";
 import CaseStudiesSection from "@/components/CaseStudiesSection";
 import AboutUsSection from "@/components/AboutUsSection";
 import Footer from "@/components/Footer";
+import ContactSection from "@/components/ContactSection";
+import SeoAuditForm from "../components/blocks/seo-form.tsx";
  
 type DynamicComponentProps = {
   layout: any;
@@ -73,10 +75,27 @@ const DynamicComponent = ({ layout }: DynamicComponentProps) => {
 
   case "acf-sections.session-item-sections":
   return <AboutUsSection data={layout} />;
-  
+
+  case "acf-sections.form-with-contact-info":
+  return <ContactSection data={layout} />;
+
   case "acf-sections.home-award-winner":
   return <Footer data={layout} />;
 
+  case "acf-sections.contact-form":
+  return <ContactSection data={layout} />;
+
+case "acf-sections.seo-audit-form":
+  return  <SeoAuditForm
+      key={layout.id}
+      fields={layout.SEO}
+      main_title={layout.main_title}
+      description={layout.description}
+      success_message={layout.success_message}
+      error_message={layout.error_message}
+      submit_label={layout.submit_label}
+    />;
+  
     default:
       console.warn(
         `No frontend template found for: ${layout.__component}`

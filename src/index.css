@@ -114,3 +114,6 @@ html {
   scroll-behavior: smooth;
   scroll-padding-top: 90px;
 }
+.max-w-md {
+    max-width: 32rem;
+}
