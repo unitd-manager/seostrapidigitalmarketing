@@ -12,14 +12,16 @@ import {
 type PainPoint = {
   icon?: string;
   text?: string;
+  Publish?: boolean | null;
 };
 
 type ProblemSectionData = {
   eyebrow?: string;
   main_title?: string;
-  description?: string;
+  description?: any; // Rich text (Blocks) comes back as an array
   highlight_text?: string;
   list?: PainPoint[];
+  Publish?: boolean | null;
 };
 
 type Props = {
@@ -34,11 +36,35 @@ const iconMap: Record<string, React.ElementType> = {
   "dollar-sign": DollarSign,
 };
 
+// Visible unless explicitly set to false (empty/null counts as visible)
+const isPublished = (item?: { Publish?: boolean | null } | null): boolean =>
+  item?.Publish !== false;
+
+// Converts Strapi rich text (Blocks) into plain text
+const getRichText = (content: any): string => {
+  if (!content) return "";
+
+  if (typeof content === "string") return content;
+
+  if (Array.isArray(content)) {
+    return content
+      .map((block: any) =>
+        (block.children || []).map((child: any) => child.text || "").join("")
+      )
+      .join(" ");
+  }
+
+  return "";
+};
+
 export default function ProblemSection({ data }: Props) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true });
 
-  const painPoints = data?.list || [];
+  // Whole block hidden when its own Publish toggle is false
+  if (!isPublished(data)) return null;
+
+  const painPoints = (data?.list || []).filter(isPublished);
 
   return (
     <section className="bg-background relative overflow-hidden" ref={ref}>
@@ -69,47 +95,47 @@ export default function ProblemSection({ data }: Props) {
 
           {data?.description && (
             <p className="mt-4 text-muted-foreground text-sm">
-              {typeof data.description === "string"
-                ? data.description
-                : JSON.stringify(data.description)}
+              {getRichText(data.description)}
             </p>
           )}
         </motion.div>
 
         {/* Cards */}
-        <div className="grid md:grid-cols-3 gap-4">
-          {painPoints.map((item, i) => {
-            const Icon =
-              iconMap[item.icon?.toLowerCase() || ""] || CircleAlert;
+        {painPoints.length > 0 && (
+          <div className="grid md:grid-cols-3 gap-4">
+            {painPoints.map((item, i) => {
+              const Icon =
+                iconMap[item.icon?.toLowerCase() || ""] || CircleAlert;
 
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{ scale: 1.04, y: -5 }}
-                className="group relative rounded-xl p-[1px] bg-gradient-to-br from-primary/30 via-primary/10 to-transparent"
-              >
-                <div className="rounded-xl bg-card p-5 flex items-start gap-3 h-full transition-all duration-300 group-hover:bg-secondary">
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={inView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ delay: i * 0.1 }}
+                  whileHover={{ scale: 1.04, y: -5 }}
+                  className="group relative rounded-xl p-[1px] bg-gradient-to-br from-primary/30 via-primary/10 to-transparent"
+                >
+                  <div className="rounded-xl bg-card p-5 flex items-start gap-3 h-full transition-all duration-300 group-hover:bg-secondary">
 
-                  <motion.div
-                    whileHover={{ rotate: 8, scale: 1.1 }}
-                    className="p-2.5 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 group-hover:from-primary/40 group-hover:to-primary/20 transition"
-                  >
-                    <Icon className="w-5 h-5 text-primary" />
-                  </motion.div>
+                    <motion.div
+                      whileHover={{ rotate: 8, scale: 1.1 }}
+                      className="p-2.5 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 group-hover:from-primary/40 group-hover:to-primary/20 transition"
+                    >
+                      <Icon className="w-5 h-5 text-primary" />
+                    </motion.div>
 
-                  <p className="text-secondary-foreground text-sm leading-relaxed">
-                    {item.text}
-                  </p>
-                </div>
+                    <p className="text-secondary-foreground text-sm leading-relaxed">
+                      {item.text}
+                    </p>
+                  </div>
 
-                <div className="absolute inset-0 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition duration-500 bg-primary/20"></div>
-              </motion.div>
-            );
-          })}
-        </div>
+                  <div className="absolute inset-0 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition duration-500 bg-primary/20"></div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Highlight */}
         {data?.highlight_text && (

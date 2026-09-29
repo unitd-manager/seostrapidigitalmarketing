@@ -10,17 +10,23 @@ type CaseStudyCard = {
   description?: RichText;
   button_text?: string;
   button_url?: string;
+  Publish?: boolean | null;
 };
 
 type CaseStudiesData = {
   title?: string;
   subtitle?: string;
   automation_edge_list?: CaseStudyCard[];
+  Publish?: boolean | null;
 };
 
 type CaseStudiesSectionProps = {
   data: CaseStudiesData;
 };
+
+// Visible unless explicitly set to false (empty/null counts as visible)
+const isPublished = (item?: { Publish?: boolean | null } | null) =>
+  item?.Publish !== false;
 
 /**
  * Strapi text fields occasionally pick up a stray leading/trailing space from
@@ -36,9 +42,9 @@ function normalizeInternalPath(raw?: string): string | null {
 }
 
 const CaseStudiesSection = ({ data }: CaseStudiesSectionProps) => {
-  if (!data) return null;
+  if (!data || !isPublished(data)) return null;
 
-  const caseStudies = data?.automation_edge_list || [];
+  const caseStudies = (data.automation_edge_list || []).filter(isPublished);
 
   return (
     <section id="case-studies" className="py-20 bg-background">
@@ -61,71 +67,73 @@ const CaseStudiesSection = ({ data }: CaseStudiesSectionProps) => {
 
         {/* Cards */}
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {caseStudies.map((study, index) => (
-            <motion.div
-              key={study.id ?? index}
-              whileHover={{ y: -8, scale: 1.02 }}
-              transition={{ duration: 0.3 }}
-              className="
-                relative overflow-hidden
-                rounded-2xl p-8
-                border border-primary/20
-                bg-gradient-to-br from-[#111827] to-[#0b0f19]
-                shadow-[0_0_25px_rgba(250,204,21,0.08)]
-                hover:shadow-[0_0_35px_rgba(250,204,21,0.25)]
-                hover:border-primary/50
-                transition-all duration-500
-              "
-            >
-              {/* Glow */}
+        {caseStudies.length > 0 && (
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {caseStudies.map((study, index) => (
+              <motion.div
+                key={study.id ?? index}
+                whileHover={{ y: -8, scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+                className="
+                  relative overflow-hidden
+                  rounded-2xl p-8
+                  border border-primary/20
+                  bg-gradient-to-br from-[#111827] to-[#0b0f19]
+                  shadow-[0_0_25px_rgba(250,204,21,0.08)]
+                  hover:shadow-[0_0_35px_rgba(250,204,21,0.25)]
+                  hover:border-primary/50
+                  transition-all duration-500
+                "
+              >
+                {/* Glow */}
 
-              <div className="absolute inset-0 opacity-0 hover:opacity-100 transition duration-500">
-                <div className="absolute -inset-1 bg-primary/10 blur-3xl" />
-              </div>
-
-              <div className="relative z-10">
-                {study?.badge && (
-                  <div className="inline-block mb-4 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs uppercase tracking-widest font-semibold">
-                    {study.badge}
-                  </div>
-                )}
-
-                {study?.title && (
-                  <h3 className="text-2xl font-bold text-white mb-4 leading-tight">
-                    {study.title}
-                  </h3>
-                )}
-
-                <div className="text-muted-foreground mb-8 leading-relaxed">
-                  {richTextToPlain(study.description)}
+                <div className="absolute inset-0 opacity-0 hover:opacity-100 transition duration-500">
+                  <div className="absolute -inset-1 bg-primary/10 blur-3xl" />
                 </div>
 
-                {study?.button_text &&
-                  (() => {
-                    const to = normalizeInternalPath(study.button_url);
-                    if (!to) return null;
-                    return (
-                      <Link
-                        to={to}
-                        className="
-                          inline-flex items-center gap-2
-                          bg-primary text-black
-                          px-5 py-3 rounded-xl
-                          font-semibold
-                          hover:scale-105
-                          transition-all duration-300
-                          shadow-[0_0_20px_rgba(250,204,21,0.25)]
-                        "
-                      >
-                        {study.button_text}
-                      </Link>
-                    );
-                  })()}
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                <div className="relative z-10">
+                  {study?.badge && (
+                    <div className="inline-block mb-4 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs uppercase tracking-widest font-semibold">
+                      {study.badge}
+                    </div>
+                  )}
+
+                  {study?.title && (
+                    <h3 className="text-2xl font-bold text-white mb-4 leading-tight">
+                      {study.title}
+                    </h3>
+                  )}
+
+                  <div className="text-muted-foreground mb-8 leading-relaxed">
+                    {richTextToPlain(study.description)}
+                  </div>
+
+                  {study?.button_text &&
+                    (() => {
+                      const to = normalizeInternalPath(study.button_url);
+                      if (!to) return null;
+                      return (
+                        <Link
+                          to={to}
+                          className="
+                            inline-flex items-center gap-2
+                            bg-primary text-black
+                            px-5 py-3 rounded-xl
+                            font-semibold
+                            hover:scale-105
+                            transition-all duration-300
+                            shadow-[0_0_20px_rgba(250,204,21,0.25)]
+                          "
+                        >
+                          {study.button_text}
+                        </Link>
+                      );
+                    })()}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

@@ -1,10 +1,11 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { ShieldCheck, Lock, ArrowLeft, CreditCard, AlertCircle, CheckCircle2, ExternalLink } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart, type CartItem } from "@/context/CartContext";
+import { fetchHeader, fetchFooter } from "@/lib/strapi";
 import {
   getPaymentButtonLabel,
   getPaymentItemKey,
@@ -135,6 +136,36 @@ const Checkout = () => {
   const location = useLocation();
   const ref = useRef(null);
   const inView = useInView(ref, { once: true });
+
+  const [headerData, setHeaderData] = useState<any>(null);
+  const [footerData, setFooterData] = useState<any>(null);
+
+  /*
+   * This page renders standalone (not through DynamicPage),
+   * so it has to fetch header/footer itself, same as CaseStudyDetail/Cart.
+   * Failures here should not break the checkout flow.
+   */
+  useEffect(() => {
+    const loadChrome = async () => {
+      try {
+        const header = await fetchHeader();
+        setHeaderData(header);
+      } catch (headerError) {
+        console.error("Checkout: failed to load header", headerError);
+        setHeaderData(null);
+      }
+
+      try {
+        const footer = await fetchFooter();
+        setFooterData(footer);
+      } catch (footerError) {
+        console.error("Checkout: failed to load footer", footerError);
+        setFooterData(null);
+      }
+    };
+
+    loadChrome();
+  }, []);
 
   const buyNowItem = (location.state as CheckoutState | null)?.buyNowItem;
   const checkoutItems: CartItem[] = (buyNowItem ? [{ ...buyNowItem, quantity: 1 }] : items).map(
@@ -324,7 +355,7 @@ const Checkout = () => {
   if (checkoutItems.length === 0) {
     return (
       <div className="min-h-screen bg-background text-foreground">
-        <Header />
+        <Header data={headerData} />
         <main className="pt-28 pb-32 flex items-center justify-center">
           <div className="text-center">
             <CheckCircle2 className="w-14 h-14 text-green-400 mx-auto mb-4" />
@@ -340,14 +371,14 @@ const Checkout = () => {
             </button>
           </div>
         </main>
-        <Footer />
+        <Footer data={footerData} />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Header />
+      <Header data={headerData} />
       <main className="pt-28 pb-32" ref={ref}>
         <div className="section-container max-w-5xl">
           <motion.div
@@ -573,7 +604,7 @@ const Checkout = () => {
           </motion.div>
         </div>
       </main>
-      <Footer />
+      <Footer data={footerData} />
     </div>
   );
 };

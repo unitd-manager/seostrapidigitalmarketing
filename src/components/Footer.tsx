@@ -4,6 +4,7 @@ type MenuItem = {
   targetBlank?: boolean;
   nav?: string;
   label?: string;
+  Publish?: boolean | null;
 };
 
 type FooterData = {
@@ -18,8 +19,14 @@ type FooterProps = {
   data?: FooterData;
 };
 
+// Visible unless explicitly set to false
+const isPublished = (item?: { Publish?: boolean | null } | null): boolean =>
+  item?.Publish !== false;
+
 const Footer = ({ data }: FooterProps) => {
   if (!data) return null;
+
+  const menuItems = (data.menu_item || []).filter(isPublished);
 
   return (
     <footer className="border-t border-border py-12">
@@ -47,9 +54,9 @@ const Footer = ({ data }: FooterProps) => {
             )}
           </div>
 
-          {data.menu_item && data.menu_item.length > 0 && (
+          {menuItems.length > 0 && (
             <nav className="flex flex-wrap gap-x-6 gap-y-3">
-              {data.menu_item.map((item, index) => {
+              {menuItems.map((item, index) => {
                 const menuLabel = item.nav ?? item.label;
                 const menuUrl = item.next_link ?? item.url;
 

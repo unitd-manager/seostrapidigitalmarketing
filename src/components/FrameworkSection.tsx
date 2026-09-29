@@ -14,6 +14,7 @@ type FrameworkItem = {
   icon?: string;
   title?: string;
   Description?: any;
+  Publish?: boolean | null;
 };
 
 type FrameworkSectionData = {
@@ -22,6 +23,7 @@ type FrameworkSectionData = {
   title?: string;
   highlight_title?: string;
   seo_reality?: FrameworkItem[];
+  Publish?: boolean | null;
 };
 
 type FrameworkSectionProps = {
@@ -36,6 +38,10 @@ const iconMap: Record<string, React.ElementType> = {
   "map-pin": MapPin,
   "bar-chart-3": BarChart3,
 };
+
+// Visible unless explicitly set to false (empty/null counts as visible)
+const isPublished = (item?: { Publish?: boolean | null } | null) =>
+  item?.Publish !== false;
 
 const getRichText = (content: any): string => {
   if (!content) return "";
@@ -53,8 +59,6 @@ const getRichText = (content: any): string => {
 };
 
 const FrameworkSection = ({ data }: FrameworkSectionProps) => {
-  if (!data) return null;
-
   const ref = useRef(null);
 
   const inView = useInView(ref, {
@@ -62,10 +66,10 @@ const FrameworkSection = ({ data }: FrameworkSectionProps) => {
     margin: "-100px",
   });
 
-  const features = data?.seo_reality || [];
+  // Placed after the hooks so React's rules of hooks are respected
+  if (!data || !isPublished(data)) return null;
 
-  console.log("FRAMEWORK DATA", data);
-  console.log("FEATURES", features);
+  const features = (data.seo_reality || []).filter(isPublished);
 
   return (
     <section id="framework" className="relative" ref={ref}>
@@ -96,38 +100,40 @@ const FrameworkSection = ({ data }: FrameworkSectionProps) => {
 
         {/* Cards */}
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((item, index) => {
-            const Icon =
-              iconMap[item.icon?.toLowerCase() || ""] || Circle;
+        {features.length > 0 && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((item, index) => {
+              const Icon =
+                iconMap[item.icon?.toLowerCase() || ""] || Circle;
 
-            return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{
-                  duration: 0.35,
-                  delay: index * 0.07,
-                }}
-                whileHover={{ scale: 1.05 }}
-                className="rounded-2xl p-8 bg-card border border-border shadow-md transition-all duration-200 ease-out hover:shadow-lg hover:shadow-primary/20"
-              >
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-tr from-primary/30 to-primary/10 flex items-center justify-center mb-5 shadow-md shadow-primary/20">
-                  <Icon className="w-6 h-6 text-primary" />
-                </div>
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={inView ? { opacity: 1, y: 0 } : {}}
+                  transition={{
+                    duration: 0.35,
+                    delay: index * 0.07,
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  className="rounded-2xl p-8 bg-card border border-border shadow-md transition-all duration-200 ease-out hover:shadow-lg hover:shadow-primary/20"
+                >
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-tr from-primary/30 to-primary/10 flex items-center justify-center mb-5 shadow-md shadow-primary/20">
+                    <Icon className="w-6 h-6 text-primary" />
+                  </div>
 
-                <h3 className="font-display font-bold text-lg text-foreground mb-2">
-                  {item.title}
-                </h3>
+                  <h3 className="font-display font-bold text-lg text-foreground mb-2">
+                    {item.title}
+                  </h3>
 
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {getRichText(item.Description)}
-                </p>
-              </motion.div>
-            );
-          })}
-        </div>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {getRichText(item.Description)}
+                  </p>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
       </div>
     </section>

@@ -3,6 +3,7 @@ import { useRef } from "react";
 
 type DelayPoint = {
   point?: string;
+  Publish?: boolean | null;
 };
 
 type HiddenCostData = {
@@ -13,11 +14,16 @@ type HiddenCostData = {
   highlight_title?: string;
   highlight_description?: string;
   delay_points?: DelayPoint[];
+  Publish?: boolean | null;
 };
 
 type HiddenCostSectionProps = {
   data: HiddenCostData;
 };
+
+// Visible unless explicitly set to false (empty/null counts as visible)
+const isPublished = (item?: { Publish?: boolean | null } | null) =>
+  item?.Publish !== false;
 
 const HiddenCostSection = ({ data }: HiddenCostSectionProps) => {
   const ref = useRef(null);
@@ -26,7 +32,10 @@ const HiddenCostSection = ({ data }: HiddenCostSectionProps) => {
     margin: "-100px",
   });
 
-  const points = data?.delay_points || [];
+  // Placed after the hooks so React's rules of hooks are respected
+  if (!isPublished(data)) return null;
+
+  const points = (data?.delay_points || []).filter(isPublished);
 
   return (
     <section className="bg-background relative" ref={ref}>
@@ -72,23 +81,25 @@ const HiddenCostSection = ({ data }: HiddenCostSectionProps) => {
             </h3>
           )}
 
-          <ul className="space-y-5 text-foreground text-lg font-medium">
-            {points.map((item, index) => (
-              <motion.li
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{
-                  duration: 0.4,
-                  delay: 0.3 + index * 0.1,
-                }}
-                className="flex items-start gap-3"
-              >
-                <span className="text-primary shrink-0 mt-1">•</span>
-                {item.point}
-              </motion.li>
-            ))}
-          </ul>
+          {points.length > 0 && (
+            <ul className="space-y-5 text-foreground text-lg font-medium">
+              {points.map((item, index) => (
+                <motion.li
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={inView ? { opacity: 1, y: 0 } : {}}
+                  transition={{
+                    duration: 0.4,
+                    delay: 0.3 + index * 0.1,
+                  }}
+                  className="flex items-start gap-3"
+                >
+                  <span className="text-primary shrink-0 mt-1">•</span>
+                  {item.point}
+                </motion.li>
+              ))}
+            </ul>
+          )}
 
           {(data?.highlight_title || data?.highlight_description) && (
             <p className="mt-8 text-center text-muted-foreground font-medium">

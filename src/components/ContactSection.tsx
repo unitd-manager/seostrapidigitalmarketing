@@ -298,7 +298,7 @@ const ContactSection = ({ data }: Props) => {
         </motion.div>
       </div>
       </section>
-      {footerData && <Footer data={footerData} />}
+      {/* {footerData && <Footer data={footerData} />} */}
     </>
   );
 };

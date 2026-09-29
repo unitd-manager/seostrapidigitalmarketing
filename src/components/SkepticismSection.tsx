@@ -10,6 +10,7 @@ import {
 type ConcernCard = {
   icon?: string;
   title?: string;
+  Publish?: boolean | null;
 };
 
 type SkepticismData = {
@@ -20,6 +21,7 @@ type SkepticismData = {
   highlight_title?: string;
   highlight_subtext?: string;
   concern_cards?: ConcernCard[];
+  Publish?: boolean | null;
 };
 
 type SkepticismSectionProps = {
@@ -33,8 +35,15 @@ const iconMap: Record<string, React.ElementType> = {
   zap: Zap,
 };
 
+// Visible unless explicitly set to false (empty/null counts as visible)
+const isPublished = (item?: { Publish?: boolean | null } | null) =>
+  item?.Publish !== false;
+
 const SkepticismSection = ({ data }: SkepticismSectionProps) => {
-  const objections = data?.concern_cards || [];
+  // Whole block hidden when its own Publish toggle is false
+  if (!isPublished(data)) return null;
+
+  const objections = (data?.concern_cards || []).filter(isPublished);
 
   return (
     <section className="bg-background relative overflow-hidden">
@@ -101,35 +110,37 @@ const SkepticismSection = ({ data }: SkepticismSectionProps) => {
         </div>
 
         {/* RIGHT CONTENT */}
-        <div className="grid gap-4">
+        {objections.length > 0 && (
+          <div className="grid gap-4">
 
-          {objections.map((item, i) => {
-            const Icon =
-              iconMap[item.icon?.toLowerCase() || ""] || CircleAlert;
+            {objections.map((item, i) => {
+              const Icon =
+                iconMap[item.icon?.toLowerCase() || ""] || CircleAlert;
 
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: 40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.03 }}
-                className="group flex items-center justify-center gap-4 p-5 rounded-xl bg-card border border-border hover:border-primary/40 transition"
-              >
-                <div className="p-2.5 rounded-lg bg-primary/20 group-hover:bg-primary/30 transition">
-                  <Icon className="w-5 h-5 text-primary" />
-                </div>
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: 40 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  viewport={{ once: true }}
+                  whileHover={{ scale: 1.03 }}
+                  className="group flex items-center justify-center gap-4 p-5 rounded-xl bg-card border border-border hover:border-primary/40 transition"
+                >
+                  <div className="p-2.5 rounded-lg bg-primary/20 group-hover:bg-primary/30 transition">
+                    <Icon className="w-5 h-5 text-primary" />
+                  </div>
 
-                <p className="text-secondary-foreground text-sm text-left w-full">
-                  {item.title}
-                </p>
+                  <p className="text-secondary-foreground text-sm text-left w-full">
+                    {item.title}
+                  </p>
 
-              </motion.div>
-            );
-          })}
+                </motion.div>
+              );
+            })}
 
-        </div>
+          </div>
+        )}
 
       </div>
     </section>

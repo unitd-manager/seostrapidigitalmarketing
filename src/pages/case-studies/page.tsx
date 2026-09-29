@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import getCaseStudyBySlug from "@/lib/case-study-api";
 import CaseStudyDetail from "@/components/CaseStudyDetail";
+import NotFound from "@/pages/NotFound"; // adjust path to your 404 page
 import type { CaseStudy } from "@/types/case-study";
 
 /**
@@ -14,7 +15,11 @@ export default function CaseStudyPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!slug) return;
+    if (!slug) {
+      // No slug in the URL, so there is nothing to load: show 404
+      setCaseStudy(null);
+      return;
+    }
 
     let cancelled = false;
     setCaseStudy(undefined);
@@ -49,12 +54,9 @@ export default function CaseStudyPage() {
     );
   }
 
+  // Unpublished or nonexistent: the API returns no entry, so show the 404 page
   if (caseStudy === null) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-white">
-        <p className="text-muted-foreground">Case study not found.</p>
-      </div>
-    );
+    return <NotFound />;
   }
 
   return <CaseStudyDetail caseStudy={caseStudy} />;

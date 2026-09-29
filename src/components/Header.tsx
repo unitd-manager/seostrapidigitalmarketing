@@ -8,6 +8,7 @@ type MenuItem = {
   url?: string;
   targetBlank?: boolean;
   label?: string;
+  Publish?: boolean | null;
 };
 
 type HeaderData = {
@@ -19,12 +20,14 @@ type HeaderData = {
   cta_label?: string;
   cta_url?: string;
   cta_target_blank?: boolean;
+  Publish?: boolean | null;
 };
 
 type HeaderProps = {
   data?: HeaderData | null;
 };
-
+const isPublished = (item?: { Publish?: boolean | null } | null): boolean =>
+  item?.Publish !== false;
 const Header = ({ data }: HeaderProps) => {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("");
@@ -64,7 +67,7 @@ const Header = ({ data }: HeaderProps) => {
     if (!data?.menu_item) return;
 
     const handleScroll = () => {
-      const menuItems = data.menu_item || [];
+      const menuItems = (data.menu_item || []).filter(isPublished);
 
       let currentSection = "";
 
@@ -283,7 +286,7 @@ const Header = ({ data }: HeaderProps) => {
         ================================================= */}
 
         <nav className="hidden md:flex items-center gap-8">
-          {(data.menu_item || []).map((item, index) => {
+          {(data.menu_item || []).filter(isPublished).map((item, index) => {
             if (!item.label || !item.url) {
               return null;
             }

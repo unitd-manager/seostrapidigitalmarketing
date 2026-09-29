@@ -13,6 +13,7 @@ type GridItem = {
   point1?: string;
   point2?: string;
   point3?: string;
+  Publish?: boolean | null;
 };
 
 type TimelineSectionData = {
@@ -20,6 +21,7 @@ type TimelineSectionData = {
   main_title?: string;
   description?: string;
   grid_items?: GridItem[];
+  Publish?: boolean | null;
 };
 
 type TimelineSectionProps = {
@@ -32,6 +34,10 @@ const iconMap: Record<string, React.ElementType> = {
   "trending-up": TrendingUp,
 };
 
+// Visible unless explicitly set to false (empty/null counts as visible)
+const isPublished = (item?: { Publish?: boolean | null } | null) =>
+  item?.Publish !== false;
+
 const TimelineSection = ({ data }: TimelineSectionProps) => {
   const ref = useRef(null);
 
@@ -40,7 +46,10 @@ const TimelineSection = ({ data }: TimelineSectionProps) => {
     margin: "-100px",
   });
 
-  const timeline = data?.grid_items || [];
+  // Placed after the hooks so React's rules of hooks are respected
+  if (!isPublished(data)) return null;
+
+  const timeline = (data?.grid_items || []).filter(isPublished);
 
   return (
     <section id="timeline" className="relative" ref={ref}>
@@ -77,84 +86,86 @@ const TimelineSection = ({ data }: TimelineSectionProps) => {
 
         {/* Timeline */}
 
-        <div className="relative max-w-6xl mx-auto">
+        {timeline.length > 0 && (
+          <div className="relative max-w-6xl mx-auto">
 
-          <div className="hidden md:block absolute top-6 left-0 right-0 h-0.5 bg-border" />
+            <div className="hidden md:block absolute top-6 left-0 right-0 h-0.5 bg-border" />
 
-          <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-8">
 
-            {timeline.map((item, index) => {
+              {timeline.map((item, index) => {
 
-              const Icon =
-                iconMap[item.icon?.toLowerCase() || ""] || Circle;
+                const Icon =
+                  iconMap[item.icon?.toLowerCase() || ""] || Circle;
 
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 40 }}
-                  animate={inView ? { opacity: 1, y: 0 } : {}}
-                  transition={{
-                    duration: 0.5,
-                    delay: index * 0.2,
-                  }}
-                  className="relative text-center"
-                >
-                  {/* Icon */}
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={inView ? { opacity: 1, y: 0 } : {}}
+                    transition={{
+                      duration: 0.5,
+                      delay: index * 0.2,
+                    }}
+                    className="relative text-center"
+                  >
+                    {/* Icon */}
 
-                  <div className="w-12 h-12 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center mx-auto mb-6 relative z-10">
-                    <Icon className="w-5 h-5 text-primary" />
-                  </div>
+                    <div className="w-12 h-12 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center mx-auto mb-6 relative z-10">
+                      <Icon className="w-5 h-5 text-primary" />
+                    </div>
 
-                  {/* Card */}
+                    {/* Card */}
 
-                  <div className="gradient-card rounded-2xl p-8">
+                    <div className="gradient-card rounded-2xl p-8">
 
-                    {item.month && (
-                      <h3 className="font-display font-bold text-lg text-primary mb-6">
-                        {item.month}
-                      </h3>
-                    )}
-
-                    <ul className="space-y-4 text-left">
-
-                      {item.point1 && (
-                        <li className="text-muted-foreground text-sm flex items-start gap-2">
-                          <span className="text-primary text-xs mt-1">
-                            ▸
-                          </span>
-                          <span>{item.point1}</span>
-                        </li>
+                      {item.month && (
+                        <h3 className="font-display font-bold text-lg text-primary mb-6">
+                          {item.month}
+                        </h3>
                       )}
 
-                      {item.point2 && (
-                        <li className="text-muted-foreground text-sm flex items-start gap-2">
-                          <span className="text-primary text-xs mt-1">
-                            ▸
-                          </span>
-                          <span>{item.point2}</span>
-                        </li>
-                      )}
+                      <ul className="space-y-4 text-left">
 
-                      {item.point3 && (
-                        <li className="text-muted-foreground text-sm flex items-start gap-2">
-                          <span className="text-primary text-xs mt-1">
-                            ▸
-                          </span>
-                          <span>{item.point3}</span>
-                        </li>
-                      )}
+                        {item.point1 && (
+                          <li className="text-muted-foreground text-sm flex items-start gap-2">
+                            <span className="text-primary text-xs mt-1">
+                              ▸
+                            </span>
+                            <span>{item.point1}</span>
+                          </li>
+                        )}
 
-                    </ul>
+                        {item.point2 && (
+                          <li className="text-muted-foreground text-sm flex items-start gap-2">
+                            <span className="text-primary text-xs mt-1">
+                              ▸
+                            </span>
+                            <span>{item.point2}</span>
+                          </li>
+                        )}
 
-                  </div>
+                        {item.point3 && (
+                          <li className="text-muted-foreground text-sm flex items-start gap-2">
+                            <span className="text-primary text-xs mt-1">
+                              ▸
+                            </span>
+                            <span>{item.point3}</span>
+                          </li>
+                        )}
 
-                </motion.div>
-              );
-            })}
+                      </ul>
+
+                    </div>
+
+                  </motion.div>
+                );
+              })}
+
+            </div>
 
           </div>
-
-        </div>
+        )}
 
       </div>
     </section>

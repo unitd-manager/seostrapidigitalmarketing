@@ -12,19 +12,14 @@ import FinalCTASection from "@/components/FinalCTASection";
 import PricingSection from "@/components/PricingSection";
 import CaseStudiesSection from "@/components/CaseStudiesSection";
 import AboutUsSection from "@/components/AboutUsSection";
-import Footer from "@/components/Footer";
 import ContactSection from "@/components/ContactSection";
 import SeoAuditForm from "../components/blocks/seo-form.tsx";
- 
+
 type DynamicComponentProps = {
   layout: any;
 };
 
 const DynamicComponent = ({ layout }: DynamicComponentProps) => {
-
-  console.log("DYNAMIC COMPONENT:", layout);
-  console.log("DYNAMIC COMPONENT UID:", layout?.__component);
-
   switch (layout.__component) {
     case "acf-sections.banner-layout":
       return <HeroSection data={layout} />;
@@ -36,21 +31,16 @@ const DynamicComponent = ({ layout }: DynamicComponentProps) => {
       return <SkepticismSection data={layout} />;
 
     case "acf-sections.common-heading-section":
-
-  switch (layout.template) {
-
-    case "seo_reality":
-      return <SeoNotaCampaignSection data={layout} />;
-
-    case "framework":
-      return <FrameworkSection data={layout} />;
-
-    case "vision_12_months":
-      return <VisionSection data={layout} />;
-
-    default:
-      return <SeoNotaCampaignSection data={layout} />;
-  }
+      switch (layout.template) {
+        case "seo_reality":
+          return <SeoNotaCampaignSection data={layout} />;
+        case "framework":
+          return <FrameworkSection data={layout} />;
+        case "vision_12_months":
+          return <VisionSection data={layout} />;
+        default:
+          return <SeoNotaCampaignSection data={layout} />;
+      }
 
     case "acf-sections.unmapped-layout":
       return <HiddenCostSection data={layout} />;
@@ -61,45 +51,40 @@ const DynamicComponent = ({ layout }: DynamicComponentProps) => {
     case "acf-sections.home-testimonial-highlight":
       return <TestimonialsSection data={layout} />;
 
-      case "acf-sections.home-key-highlights":
-  return <HowItWorksSection data={layout} />;
+    case "acf-sections.home-key-highlights":
+      return <HowItWorksSection data={layout} />;
 
-  case "acf-sections.home-featured-case-study":
-  return <PricingSection data={layout} />;
+    case "acf-sections.home-featured-case-study":
+      return <PricingSection data={layout} />;
 
-  case "acf-sections.footer-common-cta":
-  return <FinalCTASection data={layout} />;
+    case "acf-sections.footer-common-cta":
+      return <FinalCTASection data={layout} />;
 
-  case "acf-sections.home-automation-edge":
-  return <CaseStudiesSection data={layout} />;
+    case "acf-sections.home-automation-edge":
+      return <CaseStudiesSection data={layout} />;
 
-  case "acf-sections.session-item-sections":
-  return <AboutUsSection data={layout} />;
+    case "acf-sections.session-item-sections":
+      return <AboutUsSection data={layout} />;
 
-  case "acf-sections.form-with-contact-info":
-  return <ContactSection data={layout} />;
+    case "acf-sections.form-with-contact-info":
+    case "acf-sections.contact-form":
+      return <ContactSection data={layout} />;
 
-  case "acf-sections.home-award-winner":
-  return <Footer data={layout} />;
-
-  case "acf-sections.contact-form":
-  return <ContactSection data={layout} />;
-
-case "acf-sections.seo-audit-form":
-  return  <SeoAuditForm
-      key={layout.id}
-      fields={layout.SEO}
-      main_title={layout.main_title}
-      description={layout.description}
-      success_message={layout.success_message}
-      error_message={layout.error_message}
-      submit_label={layout.submit_label}
-    />;
-  
-    default:
-      console.warn(
-        `No frontend template found for: ${layout.__component}`
+    case "acf-sections.seo-audit-form":
+      return (
+        <SeoAuditForm
+          key={layout.id}
+          fields={layout.SEO}
+          main_title={layout.main_title}
+          description={layout.description}
+          success_message={layout.success_message}
+          error_message={layout.error_message}
+          submit_label={layout.submit_label}
+        />
       );
+
+    default:
+      console.warn(`No frontend template found for: ${layout.__component}`);
       return null;
   }
 };

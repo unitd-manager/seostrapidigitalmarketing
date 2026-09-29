@@ -2,12 +2,11 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import Header from "@/components/Header";
+import FooterSection from "@/components/FooterSection";
 import DynamicComponent from "@/pages/DynamicComponent";
+import NotFound from "@/pages/NotFound"; // adjust path to your 404 page
 
-import {
-  fetchPageBySlug,
-  fetchHeader,
-} from "@/lib/strapi";
+import { fetchPageBySlug, fetchHeader } from "@/lib/strapi";
 
 const DynamicPage = () => {
   const { slug } = useParams<{ slug?: string }>();
@@ -50,10 +49,12 @@ const DynamicPage = () => {
   }
 
   if (!page) {
-    return <div>Page not found</div>;
+    return <NotFound />;
   }
 
-  const layouts = page?.pageBuilder || [];
+  const layouts = (page?.pageBuilder || []).filter(
+    (layout: any) => layout.Publish !== false
+  );
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -67,6 +68,9 @@ const DynamicPage = () => {
           />
         ))}
       </main>
+
+      {/* Footer single type, shown on every page */}
+      <FooterSection />
     </div>
   );
 };

@@ -16,6 +16,13 @@ const fadeUp = {
   }),
 };
 
+/**
+ * Keeps an item unless its "Publish" toggle is explicitly false.
+ * Empty / null / missing counts as visible, so existing entries keep working.
+ */
+const onlyPublished = <T,>(items?: T[] | null): T[] =>
+  (items ?? []).filter((item) => (item as any)?.Publish !== false);
+
 const SectionLabel = ({ children }: { children: ReactNode }) => (
   <div className="flex items-center gap-4 mb-10">
     <h2 className="text-lg font-bold tracking-widest text-amber-500 uppercase whitespace-nowrap">
@@ -57,28 +64,30 @@ const CaseStudyDetail = ({ caseStudy }: CaseStudyDetailProps) => {
   const hero_title = caseStudy.hero_title;
   const hero_highlight_word = caseStudy.hero_highlight_word ?? caseStudy.hero_highlight_title;
   const hero_description = caseStudy.hero_description;
-  const hero_stats = caseStudy.hero_stats ?? [];
+
+  // ── Every repeatable list is filtered by its "Publish" toggle ──
+  const hero_stats = onlyPublished(caseStudy.hero_stats);
   const overview_title = caseStudy.overview_title;
-  const overview_points = caseStudy.overview_points ?? [];
+  const overview_points = onlyPublished(caseStudy.overview_points);
   const challenge_title = caseStudy.challenge_title;
   const challenge_intro = caseStudy.challenge_intro;
-  const challenge_items = caseStudy.challenge_items ?? [];
+  const challenge_items = onlyPublished(caseStudy.challenge_items);
   const strategy_title = caseStudy.strategy_title;
   const strategy_intro = caseStudy.strategy_intro;
-  const strategy_phases = caseStudy.strategy_phases ?? [];
+  const strategy_phases = onlyPublished(caseStudy.strategy_phases);
   const results_title = caseStudy.results_title;
   const results_intro = caseStudy.results_intro;
-  const results_stats = caseStudy.results_stats ?? caseStudy.results_items ?? [];
+  const results_stats = onlyPublished(caseStudy.results_stats ?? caseStudy.results_items);
   const why_worked_title = caseStudy.why_worked_title ?? caseStudy.why_section_title ?? "Why the Strategy Worked";
   const why_worked_intro = caseStudy.why_worked_intro ?? caseStudy.why_section_intro;
-  const why_worked_points = caseStudy.why_worked_points ?? caseStudy.why_section_items ?? [];
+  const why_worked_points = onlyPublished(caseStudy.why_worked_points ?? caseStudy.why_section_items);
   const why_worked_closing = caseStudy.why_worked_closing ?? caseStudy.why_section_closing;
   const looking_ahead_title = caseStudy.looking_ahead_title ?? caseStudy.closing_title ?? "Looking Ahead";
   const looking_ahead_content = caseStudy.looking_ahead_content ?? caseStudy.closing_content;
   const conclusion_title = caseStudy.conclusion_title;
   const conclusion_content = caseStudy.conclusion_content;
   const key_results_title = caseStudy.key_results_title;
-  const key_results_stats = caseStudy.key_results_stats ?? [];
+  const key_results_stats = onlyPublished(caseStudy.key_results_stats);
   const key_results_highlight_heading = caseStudy.key_results_highlight_heading;
   const key_results_highlight_label = caseStudy.key_results_highlight_label;
   const services_provided = caseStudy.services_provided;
@@ -87,10 +96,7 @@ const CaseStudyDetail = ({ caseStudy }: CaseStudyDetailProps) => {
   const client = caseStudy.client;
   const industry = caseStudy.industry;
 
-  const defaultPhaseIndex = Math.max(
-    0,
-    strategy_phases.findIndex((p) => p.default_active)
-  );
+  const defaultPhaseIndex = strategy_phases.findIndex((p: any) => p.default_active);
 
   const [activePhase, setActivePhase] = useState(defaultPhaseIndex === -1 ? 0 : defaultPhaseIndex);
   const [openChallenge, setOpenChallenge] = useState<number | null>(null);
@@ -117,19 +123,21 @@ const CaseStudyDetail = ({ caseStudy }: CaseStudyDetailProps) => {
         setHeaderData(null);
       }
 
-    try {
-  const footer = await fetchFooter();
-  setFooterData(footer);
-} catch (footerError) {
-  console.error("CaseStudyDetail: failed to load footer", footerError);
-  setFooterData(null);
-}
+      try {
+        const footer = await fetchFooter();
+        setFooterData(footer);
+      } catch (footerError) {
+        console.error("CaseStudyDetail: failed to load footer", footerError);
+        setFooterData(null);
+      }
     };
 
     loadChrome();
   }, []);
 
-  const activeStrategyPhase = strategy_phases[activePhase];
+  // Falls back to the first visible phase if the active index no longer exists
+  const activeStrategyPhase = strategy_phases[activePhase] ?? strategy_phases[0];
+  const activePhaseItems = onlyPublished(activeStrategyPhase?.items);
 
   return (
     <div className="min-h-screen bg-background text-white">
@@ -189,7 +197,7 @@ const CaseStudyDetail = ({ caseStudy }: CaseStudyDetailProps) => {
                 transition={{ duration: 0.7, delay: 0.2 }}
                 className="flex flex-col gap-5 pb-8 overflow-visible"
               >
-                {hero_stats.map((stat, index) => (
+                {hero_stats.map((stat: any, index: number) => (
                   <motion.div
                     key={stat.id}
                     custom={index}
@@ -219,7 +227,7 @@ const CaseStudyDetail = ({ caseStudy }: CaseStudyDetailProps) => {
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={fadeUp}>
               <SectionLabel>{overview_title || "Overview"}</SectionLabel>
               <ul className="space-y-5">
-                {overview_points.map((point, index) => (
+                {overview_points.map((point: any, index: number) => (
                   <motion.li
                     key={point.id}
                     custom={index}
@@ -252,9 +260,10 @@ const CaseStudyDetail = ({ caseStudy }: CaseStudyDetailProps) => {
               </motion.div>
 
               <div className="grid md:grid-cols-2 gap-4">
-                {challenge_items.map((item, i) => {
+                {challenge_items.map((item: any, i: number) => {
                   const isOpen = openChallenge === i;
                   const preview = item.short_text || richTextToPlain(item.description).slice(0, 110);
+                  const itemTags = onlyPublished(item.tags);
                   return (
                     <motion.div
                       key={item.id}
@@ -273,9 +282,9 @@ const CaseStudyDetail = ({ caseStudy }: CaseStudyDetailProps) => {
                           {isOpen ? (
                             <div>
                               <StrapiBlocks content={item.description} className="text-lg leading-9 mb-4" />
-                              {item.tags && item.tags.length > 0 && (
+                              {itemTags.length > 0 && (
                                 <div className="flex flex-wrap gap-2 mb-5">
-                                  {item.tags.map((tag) => (
+                                  {itemTags.map((tag: any) => (
                                     <Tag key={tag.id}>{tag.text}</Tag>
                                   ))}
                                 </div>
@@ -341,14 +350,14 @@ const CaseStudyDetail = ({ caseStudy }: CaseStudyDetailProps) => {
                       {activeStrategyPhase.description}
                     </p>
                   )}
-                  {activeStrategyPhase.items_label && (
+                  {activeStrategyPhase.items_label && activePhaseItems.length > 0 && (
                     <h4 className="text-sm uppercase tracking-[0.2em] text-white/70 mt-6 mb-4">
                       {activeStrategyPhase.items_label}
                     </h4>
                   )}
-                  {activeStrategyPhase.items?.length > 0 && (
+                  {activePhaseItems.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-6">
-                      {activeStrategyPhase.items.map((tag) => (
+                      {activePhaseItems.map((tag: any) => (
                         <Tag key={tag.id}>{tag.text}</Tag>
                       ))}
                     </div>
@@ -362,12 +371,12 @@ const CaseStudyDetail = ({ caseStudy }: CaseStudyDetailProps) => {
 
                 {/* Right phase selector */}
                 <div className="flex flex-col gap-4">
-                  {strategy_phases.map((phase, index) => (
+                  {strategy_phases.map((phase: any, index: number) => (
                     <div
                       key={phase.id}
                       onMouseEnter={() => setActivePhase(index)}
                       className={`cursor-pointer rounded-2xl p-6 border transition-all duration-500 group ${
-                        activePhase === index
+                        activeStrategyPhase.id === phase.id
                           ? "border-primary bg-primary/10 shadow-[0_0_30px_rgba(255,119,5,0.25),0_20px_50px_rgba(255,119,5,0.15)] scale-[1.02]"
                           : "border-white/[0.07] bg-white/[0.03] hover:border-primary/40 hover:bg-primary/[0.06] hover:scale-[1.02] hover:shadow-[0_0_25px_rgba(255,119,5,0.2)] hover:-translate-y-1"
                       }`}
@@ -394,7 +403,7 @@ const CaseStudyDetail = ({ caseStudy }: CaseStudyDetailProps) => {
               </motion.div>
 
               <div className="grid md:grid-cols-2 gap-6">
-                {results_stats.map((result, index) => {
+                {results_stats.map((result: any, index: number) => {
                   const isOpen = openResult === index;
                   return (
                     <motion.div
@@ -460,7 +469,7 @@ const CaseStudyDetail = ({ caseStudy }: CaseStudyDetailProps) => {
               </motion.div>
 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {why_worked_points.map((item, i) => (
+                {why_worked_points.map((item: any, i: number) => (
                   <motion.div
                     key={item.id}
                     custom={i}
@@ -517,73 +526,74 @@ const CaseStudyDetail = ({ caseStudy }: CaseStudyDetailProps) => {
               </div>
             </motion.div>
           )}
-          {/* ── Key Results Summary ───────────────────────────────── */}
-{(key_results_stats.length > 0 || key_results_highlight_heading) && (
-  <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={fadeUp}>
-    <SectionLabel>{key_results_title || "Key Results Summary"}</SectionLabel>
-    <div className="grid md:grid-cols-3 gap-4 mb-4">
-      {key_results_stats.map((stat, i) => (
-        <motion.div
-          key={stat.id}
-          custom={i}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={fadeUp}
-          className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-8 text-center hover:border-primary/40 hover:-translate-y-1 transition-all duration-500"
-        >
-          <div className="text-2xl md:text-3xl font-bold text-primary mb-2">{stat.value}</div>
-          <div className="text-base text-muted-foreground">{stat.label}</div>
-        </motion.div>
-      ))}
-    </div>
-    {key_results_highlight_heading && (
-      <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-8 text-center">
-        <div className="text-2xl md:text-3xl font-bold text-primary mb-2">{key_results_highlight_heading}</div>
-        <div className="text-base text-muted-foreground">{key_results_highlight_label}</div>
-      </div>
-    )}
-  </motion.div>
-)}
 
-{/* ── Project Information ───────────────────────────────── */}
-{(client || industry || services_provided || agency || campaign_focus) && (
-  <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={fadeUp}>
-    <SectionLabel>Project Information</SectionLabel>
-    <div className="glass-card rounded-3xl border border-primary/10 p-8 md:p-10 grid sm:grid-cols-2 gap-8">
-      {client && (
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Client</p>
-          <p className="text-lg font-bold text-white">{client}</p>
-        </div>
-      )}
-      {industry && (
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Industry</p>
-          <p className="text-lg font-bold text-white">{industry}</p>
-        </div>
-      )}
-      {services_provided && (
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Services Provided</p>
-          <p className="text-base text-muted-foreground">{services_provided}</p>
-        </div>
-      )}
-      {agency && (
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Agency</p>
-          <p className="text-lg font-bold text-white">{agency}</p>
-        </div>
-      )}
-      {campaign_focus && (
-        <div className="sm:col-span-2">
-          <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Campaign Focus</p>
-          <p className="text-base text-muted-foreground">{campaign_focus}</p>
-        </div>
-      )}
-    </div>
-  </motion.div>
-)}
+          {/* ── Key Results Summary ───────────────────────────────── */}
+          {(key_results_stats.length > 0 || key_results_highlight_heading) && (
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={fadeUp}>
+              <SectionLabel>{key_results_title || "Key Results Summary"}</SectionLabel>
+              <div className="grid md:grid-cols-3 gap-4 mb-4">
+                {key_results_stats.map((stat: any, i: number) => (
+                  <motion.div
+                    key={stat.id}
+                    custom={i}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    variants={fadeUp}
+                    className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-8 text-center hover:border-primary/40 hover:-translate-y-1 transition-all duration-500"
+                  >
+                    <div className="text-2xl md:text-3xl font-bold text-primary mb-2">{stat.value}</div>
+                    <div className="text-base text-muted-foreground">{stat.label}</div>
+                  </motion.div>
+                ))}
+              </div>
+              {key_results_highlight_heading && (
+                <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-8 text-center">
+                  <div className="text-2xl md:text-3xl font-bold text-primary mb-2">{key_results_highlight_heading}</div>
+                  <div className="text-base text-muted-foreground">{key_results_highlight_label}</div>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* ── Project Information ───────────────────────────────── */}
+          {(client || industry || services_provided || agency || campaign_focus) && (
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={fadeUp}>
+              <SectionLabel>Project Information</SectionLabel>
+              <div className="glass-card rounded-3xl border border-primary/10 p-8 md:p-10 grid sm:grid-cols-2 gap-8">
+                {client && (
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Client</p>
+                    <p className="text-lg font-bold text-white">{client}</p>
+                  </div>
+                )}
+                {industry && (
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Industry</p>
+                    <p className="text-lg font-bold text-white">{industry}</p>
+                  </div>
+                )}
+                {services_provided && (
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Services Provided</p>
+                    <p className="text-base text-muted-foreground">{services_provided}</p>
+                  </div>
+                )}
+                {agency && (
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Agency</p>
+                    <p className="text-lg font-bold text-white">{agency}</p>
+                  </div>
+                )}
+                {campaign_focus && (
+                  <div className="sm:col-span-2">
+                    <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Campaign Focus</p>
+                    <p className="text-base text-muted-foreground">{campaign_focus}</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
 

@@ -10,6 +10,7 @@ interface SeoFormField {
   placeholder: string;
   required: boolean;
   order: number;
+  Publish?: boolean | null;
 }
 
 interface SeoAuditFormProps {
@@ -19,6 +20,7 @@ interface SeoAuditFormProps {
   success_message?: string;
   error_message?: string;
   submit_label?: string;
+  Publish?: boolean | null;
 }
 
 const websitePattern = /^(https?:\/\/)?(www\.)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/;
@@ -30,6 +32,10 @@ function validatorFor(type: SeoFormField["type"]) {
   return null;
 }
 
+// Visible unless explicitly set to false (empty/null counts as visible)
+const isPublished = (item?: { Publish?: boolean | null } | null) =>
+  item?.Publish !== false;
+
 export default function SeoAuditForm({
   fields,
   main_title,
@@ -37,6 +43,7 @@ export default function SeoAuditForm({
   success_message,
   error_message,
   submit_label,
+  Publish,
 }: SeoAuditFormProps) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
@@ -44,7 +51,11 @@ export default function SeoAuditForm({
   );
   const [footerData, setFooterData] = useState<any>(null);
 
-  const sorted = [...fields].sort((a, b) => a.order - b.order);
+  // Hidden fields are removed here, so they are also skipped by validation
+  // and never sent to the API.
+  const sorted = [...(fields || [])]
+    .filter(isPublished)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   // Fallbacks in case a field is left blank in Strapi
   const heading = main_title || "Get Your Free SEO Audit Report";
@@ -117,6 +128,10 @@ export default function SeoAuditForm({
     }
   }
 
+  // Whole block hidden when its own Publish toggle is false.
+  // Placed after all hooks so React's rules of hooks are respected.
+  if (!isPublished({ Publish })) return null;
+
   return (
     <>
       <section className="flex min-h-[calc(100vh-6rem)] items-center justify-center bg-[#0f172a] px-4 py-16">
@@ -160,7 +175,7 @@ export default function SeoAuditForm({
         </div>
       </section>
 
-      {footerData && <Footer data={footerData} />}
+      {/* {footerData && <Footer data={footerData} />} */}
     </>
   );
 }

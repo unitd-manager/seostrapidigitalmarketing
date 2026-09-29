@@ -4,6 +4,7 @@ import { useRef } from "react";
 type VisionItem = {
   title?: string;
   Description?: any;
+  Publish?: boolean | null;
 };
 
 type VisionSectionData = {
@@ -12,11 +13,16 @@ type VisionSectionData = {
   description?: any;
   bottom_text?: string;
   seo_reality?: VisionItem[];
+  Publish?: boolean | null;
 };
 
 type VisionSectionProps = {
   data: VisionSectionData;
 };
+
+// Visible unless explicitly set to false (empty/null counts as visible)
+const isPublished = (item?: { Publish?: boolean | null } | null) =>
+  item?.Publish !== false;
 
 const getRichText = (content: any): string => {
   if (!content) return "";
@@ -41,7 +47,10 @@ const VisionSection = ({ data }: VisionSectionProps) => {
     margin: "-100px",
   });
 
-  const items = data?.seo_reality || [];
+  // Placed after the hooks so React's rules of hooks are respected
+  if (!isPublished(data)) return null;
+
+  const items = (data?.seo_reality || []).filter(isPublished);
 
   return (
     <section
@@ -82,32 +91,34 @@ const VisionSection = ({ data }: VisionSectionProps) => {
 
         {/* Vision Items */}
 
-        <div className="relative max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
+        {items.length > 0 && (
+          <div className="relative max-w-6xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
 
-            {items.map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{
-                  duration: 0.5,
-                  delay: 0.3 + i * 0.2,
-                }}
-                className="flex flex-col items-center"
-              >
-                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary via-accent to-primary shadow-lg shadow-primary/30 flex items-center justify-center font-display text-lg font-bold text-primary-foreground animate-pulse">
-                  {item.title}
-                </div>
+              {items.map((item, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={inView ? { opacity: 1, y: 0 } : {}}
+                  transition={{
+                    duration: 0.5,
+                    delay: 0.3 + i * 0.2,
+                  }}
+                  className="flex flex-col items-center"
+                >
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary via-accent to-primary shadow-lg shadow-primary/30 flex items-center justify-center font-display text-lg font-bold text-primary-foreground animate-pulse">
+                    {item.title}
+                  </div>
 
-                <p className="mt-4 text-sm text-muted-foreground text-center max-w-[160px]">
-                  {getRichText(item.Description)}
-                </p>
-              </motion.div>
-            ))}
+                  <p className="mt-4 text-sm text-muted-foreground text-center max-w-[160px]">
+                    {getRichText(item.Description)}
+                  </p>
+                </motion.div>
+              ))}
 
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Bottom Text */}
 

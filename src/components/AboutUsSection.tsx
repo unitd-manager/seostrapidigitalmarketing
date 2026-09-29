@@ -8,11 +8,13 @@ import { fetchFooter } from "@/lib/strapi";
 type SessionData = {
   session_title?: string;
   session_description?: string;
+  Publish?: boolean | null;
 };
 
 type SessionTab = {
   tab_title?: string;
   sessions?: SessionData[];
+  Publish?: boolean | null;
 };
 
 type AboutUsData = {
@@ -23,11 +25,16 @@ type AboutUsData = {
   cta_text?: string;
   cta_link_label?: string;
   cta_link_url?: string;
+  Publish?: boolean | null;
 };
 
 type Props = {
   data?: AboutUsData;
 };
+
+// Visible unless explicitly set to false (empty/null counts as visible)
+const isPublished = (item?: { Publish?: boolean | null }) =>
+  item?.Publish !== false;
 
 const AboutUsSection = ({ data }: Props) => {
   const ref = useRef(null);
@@ -53,9 +60,9 @@ const AboutUsSection = ({ data }: Props) => {
     loadFooter();
   }, []);
 
-  if (!data) return null;
+  if (!data || !isPublished(data)) return null;
 
-  const tabs = data.session_tabs || [];
+  const tabs = (data.session_tabs || []).filter(isPublished);
 
   return (
     <>
@@ -65,26 +72,18 @@ const AboutUsSection = ({ data }: Props) => {
         className="relative w-full bg-background py-20 md:py-24"
       >
         <div className="section-container">
-
-          {/* =================================================
-              PAGE INTRO
-          ================================================= */}
-
+          {/* PAGE INTRO */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
             className="mb-12"
           >
-            {/* EYEBROW */}
-
             {data.eyebrow && (
               <span className="inline-block px-4 py-2 rounded-full bg-card border border-border text-muted-foreground text-sm mb-6">
                 {data.eyebrow}
               </span>
             )}
-
-            {/* TITLE */}
 
             {data.main_title && (
               <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6">
@@ -92,23 +91,19 @@ const AboutUsSection = ({ data }: Props) => {
               </h2>
             )}
 
-            {/* DESCRIPTION */}
-
             {data.description && (
               <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-4xl mb-4">
                 {data.description}
               </p>
             )}
 
-            {/* LOOKING FOR OUR SERVICES? (CTA) */}
-
             {data.cta_text && (
               <p className="text-sm md:text-base text-muted-foreground">
                 {data.cta_text}{" "}
                 {data.cta_link_url && data.cta_link_label && (
                   <>
-                    <a
-                      href={data.cta_link_url}
+                    
+                     <a href={data.cta_link_url}
                       className="text-primary font-semibold hover:underline"
                     >
                       {data.cta_link_label}
@@ -120,73 +115,44 @@ const AboutUsSection = ({ data }: Props) => {
             )}
           </motion.div>
 
-          {/* =================================================
-              SESSION CARDS
-          ================================================= */}
-
+          {/* SESSION CARDS */}
           <div className="space-y-8">
-
             {tabs.map((tab, tabIndex) => {
-
-              const sessions = tab.sessions || [];
+              const sessions = (tab.sessions || []).filter(isPublished);
 
               return (
                 <div
                   key={`${tab.tab_title}-${tabIndex}`}
                   className="space-y-8"
                 >
-
                   {sessions.map((session, sessionIndex) => (
-
                     <motion.div
                       key={`${session.session_title}-${sessionIndex}`}
-                      initial={{
-                        opacity: 0,
-                        y: 30,
-                      }}
-                      animate={
-                        inView
-                          ? {
-                              opacity: 1,
-                              y: 0,
-                            }
-                          : {}
-                      }
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={inView ? { opacity: 1, y: 0 } : {}}
                       transition={{
                         duration: 0.6,
-                        delay:
-                          (tabIndex + sessionIndex) * 0.1,
+                        delay: (tabIndex + sessionIndex) * 0.1,
                       }}
                       className="rounded-3xl bg-card border border-border p-8 md:p-10"
                     >
-
-                      {/* SESSION TITLE */}
-
                       {session.session_title && (
                         <h3 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-6">
                           {session.session_title}
                         </h3>
                       )}
 
-                      {/* SESSION DESCRIPTION */}
-
-                      {renderDescription(
-                        session.session_description
-                      )}
-
+                      {renderDescription(session.session_description)}
                     </motion.div>
-
                   ))}
-
                 </div>
               );
             })}
-
           </div>
         </div>
       </section>
 
-      {footerData && <Footer data={footerData} />}
+      {/* {footerData && <Footer data={footerData} />} */}
     </>
   );
 };

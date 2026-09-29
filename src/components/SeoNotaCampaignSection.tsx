@@ -12,14 +12,16 @@ type SeoRealityItem = {
   icon?: string;
   title?: string;
   Description?: any;
+  Publish?: boolean | null;
 };
 
 type SeoRealitySectionData = {
   template?: string;
   eyebrow?: string;
   title?: string;
- highlight_title?: string;
+  highlight_title?: string;
   seo_reality?: SeoRealityItem[];
+  Publish?: boolean | null;
 };
 
 type Props = {
@@ -32,6 +34,10 @@ const iconMap: Record<string, React.ElementType> = {
   zap: Zap,
   target: Target,
 };
+
+// Visible unless explicitly set to false (empty/null counts as visible)
+const isPublished = (item?: { Publish?: boolean | null } | null) =>
+  item?.Publish !== false;
 
 const getRichText = (content: any): string => {
   if (!content) return "";
@@ -49,8 +55,6 @@ const getRichText = (content: any): string => {
 };
 
 const SeoNotaCampaignSection = ({ data }: Props) => {
-  if (!data) return null;
-
   const ref = useRef(null);
 
   const inView = useInView(ref, {
@@ -58,7 +62,10 @@ const SeoNotaCampaignSection = ({ data }: Props) => {
     margin: "-100px",
   });
 
-  const insights = data?.seo_reality || [];
+  // Placed after the hooks so React's rules of hooks are respected
+  if (!data || !isPublished(data)) return null;
+
+  const insights = (data.seo_reality || []).filter(isPublished);
 
   return (
     <section
@@ -94,53 +101,55 @@ const SeoNotaCampaignSection = ({ data }: Props) => {
         </motion.div>
 
         {/* Circle Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+        {insights.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
 
-          {insights.map((item, index) => {
+            {insights.map((item, index) => {
 
-            const Icon =
-              iconMap[item.icon?.toLowerCase() || ""] || Circle;
+              const Icon =
+                iconMap[item.icon?.toLowerCase() || ""] || Circle;
 
-            return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{
-                  duration: 0.5,
-                  delay: index * 0.1,
-                }}
-                whileHover={{
-                  y: -6,
-                  scale: 1.03,
-                }}
-                className="relative overflow-hidden rounded-full p-4 md:p-6 border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-sm group aspect-square flex flex-col items-center justify-center text-center"
-              >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-300">
-                  <div className="absolute -inset-1 bg-primary/10 blur opacity-20 rounded-full"></div>
-                </div>
-
-                <div className="relative z-10 flex flex-col items-center justify-center h-full">
-
-                  <div className="mb-2 md:mb-3 p-2 bg-secondary rounded-full">
-                    <Icon className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={inView ? { opacity: 1, y: 0 } : {}}
+                  transition={{
+                    duration: 0.5,
+                    delay: index * 0.1,
+                  }}
+                  whileHover={{
+                    y: -6,
+                    scale: 1.03,
+                  }}
+                  className="relative overflow-hidden rounded-full p-4 md:p-6 border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-sm group aspect-square flex flex-col items-center justify-center text-center"
+                >
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-300">
+                    <div className="absolute -inset-1 bg-primary/10 blur opacity-20 rounded-full"></div>
                   </div>
 
-                  <h3 className="text-sm md:text-base font-semibold text-foreground mb-2 leading-tight px-2">
-                    {item.title}
-                  </h3>
+                  <div className="relative z-10 flex flex-col items-center justify-center h-full">
 
-                  <p className="text-xs md:text-sm leading-tight px-2 text-muted-foreground">
-                    {getRichText(item.Description)}
-                  </p>
+                    <div className="mb-2 md:mb-3 p-2 bg-secondary rounded-full">
+                      <Icon className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                    </div>
 
-                </div>
+                    <h3 className="text-sm md:text-base font-semibold text-foreground mb-2 leading-tight px-2">
+                      {item.title}
+                    </h3>
 
-              </motion.div>
-            );
-          })}
+                    <p className="text-xs md:text-sm leading-tight px-2 text-muted-foreground">
+                      {getRichText(item.Description)}
+                    </p>
 
-        </div>
+                  </div>
+
+                </motion.div>
+              );
+            })}
+
+          </div>
+        )}
 
       </div>
     </section>

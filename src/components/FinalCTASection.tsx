@@ -2,22 +2,30 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { ArrowUpRight } from "lucide-react";
 
-type CTAButton = {
+type PublishFlag = {
+  Publish?: boolean | null;
+};
+
+type CTAButton = PublishFlag & {
   label?: string;
   url?: string;
   targetBlank?: boolean;
 };
 
-type FinalCTASectionData = {
+type FinalCTASectionData = PublishFlag & {
   main_title?: string;
   description?: any;
   bottom_text?: string;
-  cta_button?: CTAButton;
+  cta_button?: CTAButton | CTAButton[];
 };
 
 type Props = {
   data?: FinalCTASectionData;
 };
+
+// Visible unless explicitly set to false
+const isPublished = (item?: PublishFlag | null): boolean =>
+  item?.Publish !== false;
 
 const getRichText = (content: any): string => {
   if (!content) return "";
@@ -35,14 +43,22 @@ const getRichText = (content: any): string => {
 };
 
 const FinalCTASection = ({ data }: Props) => {
-  if (!data) return null;
-
   const ref = useRef(null);
 
   const inView = useInView(ref, {
     once: true,
     margin: "-100px",
   });
+
+  // Placed after the hooks so React's rules of hooks are respected
+  if (!data || !isPublished(data)) return null;
+
+  // Works whether Strapi returns one object or an array
+  const rawButton = Array.isArray(data.cta_button)
+    ? data.cta_button[0]
+    : data.cta_button;
+
+  const ctaButton = rawButton && isPublished(rawButton) ? rawButton : undefined;
 
   return (
     <section id="cta" ref={ref}>
@@ -65,20 +81,16 @@ const FinalCTASection = ({ data }: Props) => {
             </p>
           )}
 
-          {data.cta_button && (
+          {ctaButton && (
             <motion.a
-              href={data.cta_button.url || "#"}
-              target={data.cta_button.targetBlank ? "_blank" : "_self"}
-              rel={
-                data.cta_button.targetBlank
-                  ? "noopener noreferrer"
-                  : undefined
-              }
+              href={ctaButton.url || "#"}
+              target={ctaButton.targetBlank ? "_blank" : "_self"}
+              rel={ctaButton.targetBlank ? "noopener noreferrer" : undefined}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
               className="glow-button animate-glow-pulse inline-flex items-center gap-3 bg-primary text-primary-foreground px-10 py-5 rounded-xl text-lg font-bold"
             >
-              {data.cta_button.label}
+              {ctaButton.label}
               <ArrowUpRight className="w-5 h-5" />
             </motion.a>
           )}
