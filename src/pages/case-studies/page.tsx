@@ -4,6 +4,7 @@ import getCaseStudyBySlug from "@/lib/case-study-api";
 import CaseStudyDetail from "@/components/CaseStudyDetail";
 import NotFound from "@/pages/NotFound"; // adjust path to your 404 page
 import type { CaseStudy } from "@/types/case-study";
+import { useSeo } from "@/lib/seo";
 
 /**
  * Add a matching route in your router setup, e.g. in App.tsx:
@@ -37,6 +38,9 @@ export default function CaseStudyPage() {
       cancelled = true;
     };
   }, [slug]);
+
+  // SEO tags from the CMS; falls back to the case study title until/unless SEO is filled in.
+  useSeo(caseStudy?.seo, { title: caseStudy?.title, description: caseStudy?.hero_description as string | undefined });
 
   if (error) {
     return (

@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import { CartProvider } from "./context/CartContext";
 import DynamicPage from "./pages/DynamicPage";
 import CaseStudyPage from "./pages/case-studies/page";
+import RedirectResolver from "./components/RedirectResolver";
 
 const queryClient = new QueryClient();
 
@@ -39,7 +40,9 @@ const App = () => (
       <Sonner />
       <CartProvider>
         <BrowserRouter>
-          <AppRoutes />
+          <RedirectResolver>
+            <AppRoutes />
+          </RedirectResolver>
         </BrowserRouter>
       </CartProvider>
     </TooltipProvider>

@@ -71,3 +71,11 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+
+## SEO, redirects and 404 tracking
+
+- `src/lib/seo.ts`: `useSeo()` writes the Strapi SEO fields (title, description, keywords, canonical, robots/noindex, Open Graph, Twitter card, JSON-LD) into `<head>` and restores the defaults on leaving the page. Used by `DynamicPage` and the case study page.
+- `src/components/RedirectResolver.tsx`: wraps the routes, loads `GET /api/redirects/lookup` (cached 5 min in sessionStorage), follows chains, keeps the query string, fails open if Strapi is down. This is a browser-side redirect.
+- `src/pages/NotFound.tsx`: posts each missing path to `POST /api/not-found-logs/track` and sets `noindex`. A failed API call on a real page shows an error instead of a false 404.
+- Real HTTP 301/302 for search engines: run `npm run redirects:htaccess` before deploying; it writes the Strapi redirects into `public/.htaccess` (Apache).
