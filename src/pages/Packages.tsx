@@ -286,7 +286,7 @@ const Packages = () => {
             {[
               "✓ Cancel anytime",
               "✓ No setup fees",
-              "✓ Secure payment via Razorpay",
+              "✓ Secure payment via Stripe",
               "✓ Results guaranteed",
               "✓ 30-day money-back",
             ].map((badge) => (

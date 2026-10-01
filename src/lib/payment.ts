@@ -1,11 +1,11 @@
-export type PaymentProvider = "razorpay";
+export type PaymentProvider = "stripe";
 
 export type PaymentItem = {
   id?: string | null;
   name?: string | null;
 };
 
-export const DEFAULT_PAYMENT_PROVIDER: PaymentProvider = "razorpay";
+export const DEFAULT_PAYMENT_PROVIDER: PaymentProvider = "stripe";
 
 export const normalizePaymentKey = (value?: string | null) =>
   (value || "")
@@ -21,8 +21,8 @@ export const getPaymentProvider = (_provider?: string | null): PaymentProvider =
 };
 
 export const getPaymentProviderName = (provider: PaymentProvider) => {
-  if (provider === "razorpay") {
-    return "Razorpay";
+  if (provider === "stripe") {
+    return "Stripe";
   }
 
   return "Payment";

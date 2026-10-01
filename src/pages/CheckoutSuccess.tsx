@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, ArrowRight, AlertCircle } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -10,8 +10,8 @@ import { getPaymentProviderName, getPaymentProvider } from "@/lib/payment";
 type VerifiedCheckoutSuccess = {
   verified: boolean;
   checkoutReference: string;
-  razorpayOrderId: string;
-  razorpayPaymentId: string;
+  stripeCheckoutSessionId: string;
+  stripePaymentIntentId: string;
   amountMinor: number;
   amountMajor: number | string;
   currency: string;
@@ -19,6 +19,8 @@ type VerifiedCheckoutSuccess = {
   customerName?: string;
   customerEmail?: string;
 };
+
+const STRAPI_URL = import.meta.env.VITE_STRAPI_URL;
 
 const CheckoutSuccess = () => {
   const navigate = useNavigate();
@@ -30,29 +32,50 @@ const CheckoutSuccess = () => {
     [location.search]
   );
   const checkoutReference = searchParams.get("checkout_reference");
-  const razorpayPaymentId = searchParams.get("razorpay_payment_id");
+  const sessionId = searchParams.get("session_id");
   const paymentProviderName = getPaymentProviderName(getPaymentProvider());
-  const verifiedCheckout = useMemo(() => {
-    try {
-      const rawValue = sessionStorage.getItem("razorpay_checkout_success");
-      return rawValue ? (JSON.parse(rawValue) as VerifiedCheckoutSuccess) : null;
-    } catch {
-      return null;
-    }
-  }, []);
-
-  const verifiedSuccessOnLoad = Boolean(
-    verifiedCheckout?.verified &&
-      (!checkoutReference || verifiedCheckout.checkoutReference === checkoutReference)
-  );
-  const [isVerifiedSuccess] = useState(verifiedSuccessOnLoad);
+  const [verifiedCheckout, setVerifiedCheckout] = useState<VerifiedCheckoutSuccess | null>(null);
+  const [verificationStatus, setVerificationStatus] = useState<"loading" | "success" | "failed">("loading");
+  const verificationStarted = useRef(false);
 
   useEffect(() => {
-    if (!isVerifiedSuccess) return;
-    clearCart();
-    sessionStorage.removeItem("razorpay_checkout_pending");
-    sessionStorage.removeItem("razorpay_checkout_customer");
-  }, [isVerifiedSuccess, clearCart]);
+    if (verificationStarted.current) return;
+    verificationStarted.current = true;
+
+    if (!STRAPI_URL || !checkoutReference || !sessionId) {
+      setVerificationStatus("failed");
+      return;
+    }
+
+    const verifySession = async () => {
+      try {
+        const response = await fetch(`${STRAPI_URL}/api/checkout/verify-stripe-session`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ checkoutReference, sessionId }),
+        });
+        const result = await response.json() as {
+          data?: VerifiedCheckoutSuccess;
+          error?: { message?: string };
+          message?: string;
+        };
+
+        if (!response.ok || !result.data?.verified) {
+          throw new Error(result.error?.message || result.message || "Stripe could not verify this payment.");
+        }
+        setVerifiedCheckout(result.data);
+        setVerificationStatus("success");
+        clearCart();
+      } catch {
+        setVerificationStatus("failed");
+      }
+    };
+
+    void verifySession();
+  }, [checkoutReference, sessionId, clearCart]);
+
+  const isVerifiedSuccess = verificationStatus === "success";
+  const isVerifying = verificationStatus === "loading";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -82,7 +105,7 @@ const CheckoutSuccess = () => {
           </motion.div>
 
           <h1 className="font-display text-4xl font-bold mb-4">
-            {isVerifiedSuccess ? "Payment Successful!" : "Payment Not Completed"}
+            {isVerifying ? "Confirming your payment…" : isVerifiedSuccess ? "Payment Successful!" : "Payment Not Completed"}
           </h1>
           {isVerifiedSuccess ? (
             <>
@@ -94,17 +117,20 @@ const CheckoutSuccess = () => {
                   ? `${verifiedCheckout.items.map((item) => item.title).join(", ")} was submitted through ${paymentProviderName}. Our team will reach out within 24 hours to get started.`
                   : `Your payment was submitted through ${paymentProviderName}. Our team will reach out within 24 hours to get started.`}
               </p>
-              {(verifiedCheckout?.razorpayPaymentId || razorpayPaymentId) && (
+              {(verifiedCheckout?.stripePaymentIntentId || sessionId) && (
                 <p className="text-xs text-muted-foreground/60 mb-8">
-                  Payment reference: {verifiedCheckout?.razorpayPaymentId || razorpayPaymentId}
+                  Payment reference: {verifiedCheckout?.stripePaymentIntentId || sessionId}
                 </p>
               )}
             </>
+          ) : isVerifying ? (
+            <>
+              <p className="text-muted-foreground mb-2">Stripe is confirming your payment securely.</p>
+              <p className="text-sm text-muted-foreground/70 mb-8">This usually takes only a moment. Please keep this page open.</p>
+            </>
           ) : (
             <>
-              <p className="text-muted-foreground mb-2">
-                We could not verify a successful Razorpay payment for this visit.
-              </p>
+              <p className="text-muted-foreground mb-2">We could not verify a successful Stripe payment for this visit.</p>
               <p className="text-sm text-muted-foreground/70 mb-8">
                 Your cart is still saved. Please return to checkout and complete payment.
               </p>
@@ -112,10 +138,10 @@ const CheckoutSuccess = () => {
           )}
 
           <button
-            onClick={() => navigate(isVerifiedSuccess ? "/" : "/cart")}
+            onClick={() => navigate(isVerifiedSuccess ? "/" : "/checkout")}
             className="glow-button inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3.5 rounded-xl font-bold"
           >
-            Back to Home
+            {isVerifiedSuccess ? "Back to Home" : "Return to Checkout"}
             <ArrowRight className="w-4 h-4" />
           </button>
         </motion.div>
