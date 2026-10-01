@@ -1,11 +1,16 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { trackNotFound } from "@/lib/notFound";
+import { useSeo } from "@/lib/seo";
 
 const NotFound = () => {
   const location = useLocation();
 
+  // Keep the 404 out of search results.
+  useSeo(null, { title: "Page not found", noIndex: true });
+
   useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+    trackNotFound(location.pathname, document.referrer);
   }, [location.pathname]);
 
   return (

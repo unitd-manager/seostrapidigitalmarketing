@@ -1,3 +1,5 @@
+import type { SeoData } from "@/lib/seo";
+
 // Types matching the "Case Study" content type shown in the Strapi admin.
 // Field names are inferred from the admin screenshot — rename anything here
 // to match your actual attribute names if they differ (Content-Type Builder
@@ -161,6 +163,7 @@ export interface CaseStudy {
   services_provided?: string;
   agency?: string;
   campaign_focus?: string;
+  seo?: SeoData | null;
 }
 
 // Shape of a Strapi v5 REST collection response for this content type.
